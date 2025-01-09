@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        ".gitignore": "ignore",
+        "tcp.h": "c",
+        "stddef.h": "c",
+        "types.h": "c",
+        "socket.h": "c",
+        "netdb.h": "c",
+        "epoll.h": "c"
+    }
+}
