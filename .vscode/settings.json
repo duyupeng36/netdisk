@@ -6,6 +6,8 @@
         "types.h": "c",
         "socket.h": "c",
         "netdb.h": "c",
-        "epoll.h": "c"
+        "epoll.h": "c",
+        "ctype.h": "c",
+        "stdlib.h": "c"
     }
 }

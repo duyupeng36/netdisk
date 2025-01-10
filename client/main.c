@@ -47,9 +47,12 @@ int main(int argc, char *argv[]) {
             continue;
         }
         // 解析命令
-        
+        char **args = cmd_parse(cmd);
+        // 执行命令
+        cmd_exec(args);
+        // 释放参数数组
+        cmd_free(args);
     }
-    
 }
 
 
