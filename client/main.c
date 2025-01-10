@@ -6,8 +6,8 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include <tcp.h>
-#include <cmd.h>
+#include "tcp.h"
+#include "cmd.h"
 
 #define HOSTNAME "127.0.0.1"
 #define SERVICE "8080"

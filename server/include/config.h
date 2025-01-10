@@ -1,8 +1,9 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <toml.h>
 #include <sys/sysinfo.h>
+
+#include "toml.h"
 
 #define HOSTNAME "127.0.0.1"
 #define SERVICE "8080"

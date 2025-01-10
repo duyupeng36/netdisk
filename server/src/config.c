@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <config.h>
+#include "config.h"
 
 
 int load_config(const char *path, struct config *config, enum cfgtype cfgtype) {
