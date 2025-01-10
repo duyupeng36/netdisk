@@ -3,7 +3,7 @@
 #include <string.h>
 
 
-#include <cmd.h>
+#include "cmd.h"
 
 
 int cmd_read(char * restrict buf, size_t size, const char * restrict prompt) {
