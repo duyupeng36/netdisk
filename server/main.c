@@ -6,7 +6,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include <config.h>
+#include "config.h"
+#include "tcp.h"
 
 #define CONFIG_PATH "config/config.toml"
 
@@ -28,10 +29,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    printf("Server config:\n");
-    printf("hostname: %s\n", server_config.hostname);
-    printf("service: %s\n", server_config.service);
-    printf("worker_number: %ld\n", server_config.worker_number);
+    int sockfd = tcp_listen(server_config.hostname, server_config.service);
+    if(sockfd == -1) {
+        fprintf(stderr, "Failed to create socket\n");
+        return 1;
+    }
+    
     return 0;
 }
 
