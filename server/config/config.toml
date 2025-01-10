@@ -1,0 +1,4 @@
+[server]
+hostname = ""
+service = ""
+worker_number = 0

@@ -8,6 +8,13 @@
         "netdb.h": "c",
         "epoll.h": "c",
         "ctype.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "stdio.h": "c",
+        "string.h": "c",
+        "sysinfo.h": "c",
+        "toml.h": "c",
+        "config.h": "c",
+        "toml-c.h": "c",
+        "in.h": "c"
     }
 }
