@@ -15,6 +15,7 @@
         "toml.h": "c",
         "config.h": "c",
         "toml-c.h": "c",
-        "in.h": "c"
+        "in.h": "c",
+        "pool.h": "c"
     }
 }
