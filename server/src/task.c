@@ -1,6 +1,27 @@
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
+
 #include "task.h"
+
+/**
+ * @brief create a task, and return the pointer to the task
+ * 
+ * @param fd the file descriptor of the network communication
+ * @param argc the number of arguments
+ * @param argv the arguments. argv[0] is the command, and the others are the arguments
+ * @param handler the task handler function
+ * @return task_t* the pointer to the task，on error, return NULL
+ */
+static task_t * task_create(int fd, int argc, char *argv[], task_handler_t handler);
+
+/**
+ * @brief destroy a task
+ * 
+ * @param t the task to be destroyed
+ */
+static void task_destroy(task_t * t);
+
 
 int task_queue_init(task_queue_t * queue) {
     if(queue == NULL) {
@@ -20,17 +41,15 @@ int task_queue_init(task_queue_t * queue) {
     return 0;
 }
 
-int task_queue_push(task_queue_t * queue, int fd, task_handler_t handler) {
+int task_queue_push(task_queue_t * queue, int fd, int argc, char *argv[], task_handler_t handler) {
     if(queue == NULL) {
         return -1;
     }
-    task_t *t = (task_t *)malloc(sizeof(task_t));
+    task_t *t = task_create(fd, argc, argv, handler);
     if(t == NULL) {
         return -1;
     }
-    t->fd = fd;
-    t->handler = handler;
-    t->next = NULL;
+
     // 加锁: 保护队列的操作
     if(pthread_mutex_lock(&queue->mutex) != 0) {
         return -1;
@@ -89,8 +108,10 @@ int task_queue_pop(task_queue_t * queue, task_t * t) {
     // 释放队列中被取出的任务
     task_t *tmp = queue->head;
     queue->head = queue->head->next;
-    free(tmp);
+    
+    task_destroy(tmp);
     queue->size--;
+    
     // 队列为空
     if(queue->size == 0) {
         queue->tail = NULL;
@@ -118,8 +139,9 @@ int task_queue_destroy(task_queue_t * queue) {
         close(tmp->fd);
         queue->head = queue->head->next;
         // 释放任务
-        free(tmp);
+        task_destroy(tmp);
     }
+
     // 销毁互斥锁
     if(pthread_mutex_destroy(&queue->mutex) != 0) {
         return -1;
@@ -129,4 +151,35 @@ int task_queue_destroy(task_queue_t * queue) {
         return -1;
     }
     return 0;
+}
+
+
+task_t * task_create(int fd, int argc, char *argv[], task_handler_t handler) {
+    task_t *t = (task_t *)malloc(sizeof(task_t));
+    if(t == NULL) {
+        return NULL;
+    }
+    t->fd = fd;
+    t->argc = argc;
+
+    // 为参数列表分配内存
+    t->argv = (char **)malloc(sizeof(char *) * argc + 1);
+    if(t->argv == NULL) {
+        free(t);
+        return NULL;
+    }
+    memcpy(t->argv, argv, sizeof(char *) * argc + 1);
+    t->handler = handler;
+    t->next = NULL;
+    return t;
+}
+
+void task_destroy(task_t * t) {
+    if(t == NULL) {
+        return;
+    }
+    // 释放参数列表
+    free(t->argv);
+    // 释放任务
+    free(t);
 }

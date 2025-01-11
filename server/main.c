@@ -10,6 +10,8 @@
 #include "config.h"
 #include "tcp.h"
 #include "epoll.h"
+#include "pool.h"
+
 
 #define CONFIG_PATH "config/config.toml"
 
@@ -32,8 +34,19 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // 创建线程池
+    // 创建任务队列
+    task_queue_t task_queue;
+    if(task_queue_init(&task_queue) != 0) {
+        fprintf(stderr, "Failed to create task queue\n");
+        return 1;
+    }
 
+    // 创建线程池
+    thread_pool_t pool;
+    if(thread_pool_init(&pool, server_config.worker_number, &task_queue) != 0) {
+        fprintf(stderr, "Failed to create thread pool\n");
+        return 1;
+    }
 
     // 创建监听套接字
     int sockfd = tcp_listen(server_config.hostname, server_config.service);
@@ -97,10 +110,8 @@ int main(int argc, char *argv[]) {
                 // 客户端发来命令
             }
         }
-
     }
     
-
     return 0;
 }
 

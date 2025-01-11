@@ -12,9 +12,11 @@ typedef struct task task_t;
  * @brief task handler function
  * 
  * @param fd the file descriptor of the network communication
+ * @param argc the number of arguments
+ * @param argv the arguments. argv[0] is the command, and the others are the arguments
  * @return on success, return 0; on error, return -1
  */
-typedef int(*task_handler_t)(int fd);
+typedef int(*task_handler_t)(int fd, int argc, char *argv[]);
 
 /**
  * @brief task queue structure
@@ -38,6 +40,8 @@ typedef struct task_queue {
 
 struct task {
     int fd;                 // 网络通信的文件描述符
+    int argc;               // 参数个数
+    char **argv;            // 参数
     task_handler_t handler; // 任务处理函数
     task_t *next;           // 下一个任务
 };
@@ -55,10 +59,12 @@ int task_queue_init(task_queue_t * queue);
  * 
  * @param queue the task queue, where the task will be added
  * @param fd the file descriptor of the network communication
+ * @param argc the number of arguments
+ * @param argv the arguments. argv[0] is the command, and the others are the arguments
  * @param handler the task handler function
  * @return on success, return 0; on error, return -1
  */
-int task_queue_push(task_queue_t * queue, int fd, task_handler_t handler);
+int task_queue_push(task_queue_t * queue, int fd, int argc, char *argv[], task_handler_t handler);
 
 /**
  * @brief pop a task from the task queue
