@@ -47,11 +47,12 @@ int main(int argc, char *argv[]) {
             continue;
         }
         // 解析命令
-        char **args = cmd_parse(cmd);
+        int args_count = 0;
+        char **args_vec = cmd_parse(cmd, &args_count);
         // 执行命令
-        cmd_exec(args);
+        cmd_exec(socket, args_vec, args_count);
         // 释放参数数组
-        cmd_free(args);
+        cmd_free(args_vec);
     }
 }
 
