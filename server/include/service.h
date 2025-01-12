@@ -30,6 +30,8 @@ task_handler_t cmd_handler(const char *cmd);
  * @param argv the arguments. argv[0] is the command, and the others are the arguments
  * @return int  0 on success, -1 on error
  */
+int handle_login(int fd, int argc, char *argv[]);
+
 int handle_ls(int fd, int argc, char *argv[]);
 
 int handle_cd(int fd, int argc, char *argv[]);

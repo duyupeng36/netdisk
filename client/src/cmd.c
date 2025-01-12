@@ -105,6 +105,10 @@ static bool is_valid_cmd(const char *cmd)
     {
         return false;
     }
+    if(strcmp(cmd, "login") == 0)
+    {
+        return true;
+    }
     if (strcmp(cmd, "ls") == 0)
     {
         return true;
@@ -166,13 +170,14 @@ int cmd_exec(int fd, char **args, int argc)
         printf("Invalid command: %s\n", args[0]);
         return -1;
     }
+    
     // 发送参数个数
     if (send(fd, &argc, sizeof(argc), 0) != sizeof(argc))
     {
         perror("send");
         return -1;
     }
-    printf("argc = %d\n", argc);
+    // printf("argc = %d\n", argc);
 
     // 计算每个参数的长度
     int argLenVec[argc];

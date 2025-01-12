@@ -7,8 +7,8 @@
 
 #define HOSTNAME "127.0.0.1"
 #define SERVICE "8080"
+#define ROOT "/home/dyp/netdisk"
 #define WORKER_NUMBER (2 * get_nprocs_conf())
-
 
 enum cfgtype {
     CFG_SERVER,
@@ -21,6 +21,7 @@ struct config {
 struct server_config {
     char *hostname;
     char *service;
+    char *root;
     long worker_number;
 };
 

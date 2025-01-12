@@ -18,6 +18,10 @@
         "in.h": "c",
         "pool.h": "c",
         "pthread.h": "c",
-        "uio.h": "c"
+        "uio.h": "c",
+        "service.h": "c",
+        "malloc.h": "c",
+        "unistd.h": "c",
+        "shadow.h": "c"
     }
 }

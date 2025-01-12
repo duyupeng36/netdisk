@@ -8,6 +8,7 @@
 
 #include "tcp.h"
 #include "cmd.h"
+#include "auth.h"
 
 #define HOSTNAME "127.0.0.1"
 #define SERVICE "8080"
@@ -33,7 +34,11 @@ int main(int argc, char *argv[]) {
         perror("tcp_connect");
         return -1;
     }
-    // 登录服务端
+     // 登录服务端
+    if(login(sockfd) == -1) {
+        // 登录失败
+        return -1;
+    }
     
     // 循环读取用户输入
     while (true)

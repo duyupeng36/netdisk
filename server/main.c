@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
     struct server_config server_config;
     server_config.hostname = malloc(sizeof(char) * 16);
     server_config.service = malloc(sizeof(char) * 6);
+    server_config.root = malloc(sizeof(char) * 256);
     if (load_config(config_path, (struct config *)&server_config, CFG_SERVER) != 0)
     {
         fprintf(stderr, "Failed to load config\n");

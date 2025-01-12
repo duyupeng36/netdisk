@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <shadow.h>
+#define _DEFAULT_SOURCE  /* Since glibc 2.28*/
+#include <crypt.h>
+
 #include "service.h"
 
 int recv_cmd(int fd, char ***args, int *argc)
@@ -57,7 +61,11 @@ int recv_cmd(int fd, char ***args, int *argc)
 
 task_handler_t cmd_handler(const char *cmd)
 {
-    if (strcmp(cmd, "ls") == 0)
+    if (strcmp(cmd, "login") == 0)
+    {
+        return handle_login;
+    }
+    else if (strcmp(cmd, "ls") == 0)
     {
         return handle_ls;
     }
@@ -97,6 +105,37 @@ task_handler_t cmd_handler(const char *cmd)
     {
         return NULL;
     }
+}
+
+int handle_login(int fd, int argc, char *argv[]) {
+    // TODO: 实现 login
+    // 读取用户名和密码
+    char *username = "dyp";
+    char *password;
+    int passwordLen;
+    if(recv(fd, &passwordLen, sizeof(int), 0) != sizeof(int)) {
+        return -1;
+    }
+    password = malloc(passwordLen + 1);
+    if(recv(fd, password, passwordLen, 0) != passwordLen) {
+        return -1;
+    }
+    password[passwordLen] = '\0';
+    // 检查用户名和密码
+    struct spwd *sp = getspnam(username);
+    if(sp == NULL) {
+        return -1;
+    }
+
+    char *encrypted = crypt(password, sp->sp_pwdp);
+    if(encrypted == NULL) {
+        return -1;
+    }
+    if(strcmp(encrypted, sp->sp_pwdp) != 0) {
+        return -1;
+    }
+    printf("login success\n");
+    return 0;
 }
 
 int handle_ls(int fd, int argc, char *argv[])

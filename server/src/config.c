@@ -46,6 +46,22 @@ int load_config(const char *path, struct config *config, enum cfgtype cfgtype) {
                 16
             );
         }
+        // 获取 root
+        toml_datum_t root = toml_string_in(server, "root");
+        if(root.ok) {
+            strncpy(
+                ((struct server_config *)config)->root, 
+                strlen(root.u.s) ? root.u.s: ROOT, 
+                256
+            );
+            free(root.u.s);
+        } else {
+            strncpy(
+                ((struct server_config *)config)->root, 
+                ROOT, 
+                256
+            );
+        }
 
         // 获取 service
         toml_datum_t service = toml_string_in(server, "service");

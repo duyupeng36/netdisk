@@ -1,6 +1,9 @@
 /* 封装 epoll_ctl */
 
 #include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "epoll.h"
 
 
@@ -20,4 +23,3 @@ int epoll_del(int epfd, int fd) {
     }
     return 0;
 }
-

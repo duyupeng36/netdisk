@@ -7,7 +7,7 @@ CC := $(shell which gcc)
 # Compiler flags
 CFLAGS := -Wall -std=c17 -g -Og -Iinclude
 # Linker flags
-LDFLAGS := -lpthread -lcrypto -lmysqlclient
+LDFLAGS := -lcrypt -lpthread -lmysqlclient
 
 # Source files
 SRC := $(wildcard **/*.c) $(wildcard *.c)
@@ -18,7 +18,7 @@ $(EXECUTE): $(OBJ)
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 %.o: %.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY: clean
 clean:

@@ -3,11 +3,12 @@
 #include <sys/types.h>
 #include <sys/epoll.h>
 
+
 /**
  * @brief Add fd to the epoll instance to listen for events events
  * 
  * @param epfd File descriptor for the epoll instance
- * @param fd  The file descriptor to add
+ * @param data Data to associate with the fd
  * @param events Events to listen fo
  * @return on success return 0, otherwise return -1
  */
