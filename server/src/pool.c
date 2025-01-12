@@ -16,7 +16,7 @@ static void *routine(void *arg) {
             continue;
         }
         fprintf(stdout, "Thread[TID %#lx] is handling task for fd: %d\n", (long int)pthread_self(), task.fd);
-        if(task.handler(task.fd) == -1) {
+        if(task.handler(task.fd, task.argc, task.argv) == -1) {
             // handle error
             fprintf(stderr, "handle error for fd: %d\n", task.fd);
             continue;

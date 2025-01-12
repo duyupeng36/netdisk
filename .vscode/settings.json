@@ -17,6 +17,7 @@
         "toml-c.h": "c",
         "in.h": "c",
         "pool.h": "c",
-        "pthread.h": "c"
+        "pthread.h": "c",
+        "uio.h": "c"
     }
 }

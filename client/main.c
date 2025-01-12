@@ -15,11 +15,6 @@
 
 int main(int argc, char *argv[]) {
 
-    // 忽略 SIGINT 信号
-    signal(SIGINT, SIG_IGN);
-    // 忽略 SIGQUIT 信号
-    signal(SIGQUIT, SIG_IGN);
-
     if(argc > 1 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {
         printf("Usage: %s <hostname> <service>\n", argv[0]);
         printf("        - hostname: Host name of server\n");
@@ -38,19 +33,24 @@ int main(int argc, char *argv[]) {
         perror("tcp_connect");
         return -1;
     }
+    // 登录服务端
+    
     // 循环读取用户输入
     while (true)
     {
         char cmd[1024];
-        if(cmd_read(cmd, sizeof(cmd), "cmd> ") != 0) {
+        if(cmd_read(cmd, sizeof(cmd), "cmd> ") == -1) {
             // 命令读取错误，进行下一次读取
             continue;
         }
         // 解析命令
         int args_count = 0;
         char **args_vec = cmd_parse(cmd, &args_count);
+        for(char **p = args_vec; *p != NULL; p++) {
+            printf("arg: %s\n", *p);
+        }
         // 执行命令
-        cmd_exec(socket, args_vec, args_count);
+        cmd_exec(sockfd, args_vec, args_count);
         // 释放参数数组
         cmd_free(args_vec);
     }

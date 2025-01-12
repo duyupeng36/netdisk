@@ -11,14 +11,15 @@
 #include "tcp.h"
 #include "epoll.h"
 #include "pool.h"
-
+#include "service.h"
 
 #define CONFIG_PATH "config/config.toml"
 
+int main(int argc, char *argv[])
+{
 
-int main(int argc, char *argv[]) {
-
-    if(argc > 1 && strcmp(argv[1], "--help") == 0) {
+    if (argc > 1 && strcmp(argv[1], "--help") == 0)
+    {
         fprintf(stderr, "Usage: %s <config file>\n", argv[0]);
         return 1;
     }
@@ -28,42 +29,48 @@ int main(int argc, char *argv[]) {
     // 读取服务端配置文件
     struct server_config server_config;
     server_config.hostname = malloc(sizeof(char) * 16);
-    server_config.service = malloc(sizeof(char) * 6); 
-    if(load_config(config_path, (struct config *)&server_config, CFG_SERVER) != 0) {
+    server_config.service = malloc(sizeof(char) * 6);
+    if (load_config(config_path, (struct config *)&server_config, CFG_SERVER) != 0)
+    {
         fprintf(stderr, "Failed to load config\n");
         return 1;
     }
 
     // 创建任务队列
     task_queue_t task_queue;
-    if(task_queue_init(&task_queue) != 0) {
+    if (task_queue_init(&task_queue) != 0)
+    {
         fprintf(stderr, "Failed to create task queue\n");
         return 1;
     }
 
     // 创建线程池
     thread_pool_t pool;
-    if(thread_pool_init(&pool, server_config.worker_number, &task_queue) != 0) {
+    if (thread_pool_init(&pool, server_config.worker_number, &task_queue) != 0)
+    {
         fprintf(stderr, "Failed to create thread pool\n");
         return 1;
     }
 
     // 创建监听套接字
     int sockfd = tcp_listen(server_config.hostname, server_config.service);
-    if(sockfd == -1) {
+    if (sockfd == -1)
+    {
         fprintf(stderr, "Failed to create socket\n");
         return 1;
     }
 
     // 创建 epoll 实例
     int epfd = epoll_create(1024);
-    if(epfd == -1) {
+    if (epfd == -1)
+    {
         fprintf(stderr, "Failed to create epoll\n");
         return 1;
     }
 
     // 添加监听套接字到 epoll 实例
-    if(epoll_add(epfd, sockfd, EPOLLIN) == -1) {
+    if (epoll_add(epfd, sockfd, EPOLLIN) == -1)
+    {
         fprintf(stderr, "Failed to add sockfd to epoll\n");
         return 1;
     }
@@ -78,40 +85,63 @@ int main(int argc, char *argv[]) {
     while (true)
     {
         int readyNumber = epoll_wait(epfd, events, 2 * monitorNumber, -1);
-        if(readyNumber == -1) {
+        if (readyNumber == -1)
+        {
             fprintf(stderr, "Failed to wait for epoll\n");
             return 1;
         }
 
         // 循环处理事件
-        for(int i = 0; i < readyNumber; i++) {
-            if(events[i].data.fd == sockfd) {
+        for (int i = 0; i < readyNumber; i++)
+        {
+            if (events[i].data.fd == sockfd)
+            {
                 // 有新的客户端连接
                 int netfd = accept(events[i].data.fd, NULL, NULL);
-                if(netfd == -1) {
+                if (netfd == -1)
+                {
                     fprintf(stderr, "Failed to accept\n");
                     return 1;
                 }
                 // 添加新的客户端连接到 epoll 实例
-                if(epoll_add(epfd, netfd, EPOLLIN) == -1) {
+                if (epoll_add(epfd, netfd, EPOLLIN) == -1)
+                {
                     fprintf(stderr, "Failed to add netfd to epoll\n");
                     return 1;
                 }
                 monitorNumber++;
-                if(monitorNumber > readySize) {
+                if (monitorNumber > readySize)
+                {
                     readySize = 2 * monitorNumber;
-                    events = realloc(events, sizeof(struct epoll_event) * readySize);
-                    if(events == NULL) {
+                    struct epoll_event *newEvents = realloc(events, sizeof(struct epoll_event) * readySize);
+                    if (newEvents == NULL)
+                    {
                         fprintf(stderr, "Failed to realloc events\n");
                         return 1;
                     }
+                    events = newEvents;
                 }
-            } else {
+            }
+            else
+            {
                 // 客户端发来命令
+                char **args = NULL;
+                int argc = 0;
+                if (recv_cmd(events[i].data.fd, &args, &argc) != 0)
+                {
+                    fprintf(stderr, "Failed to receive command\n");
+                    return 1;
+                }
+                // 检查命令，为命令分配处理函数，并添加到任务队列
+                task_handler_t handler = cmd_handler(args[0]);
+                if(handler == NULL) {
+                    fprintf(stderr, "Invalid command\n");
+                    return 1;
+                }
+                task_queue_push(&task_queue, events[i].data.fd, argc, args, handler);
             }
         }
     }
-    
+
     return 0;
 }
-

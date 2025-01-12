@@ -1,4 +1,4 @@
 [server]
-hostname = ""
-service = ""
-worker_number = 0
+hostname = "127.0.0.1"
+service = "8080"
+worker_number = 2
