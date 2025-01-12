@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "service.h"
 
@@ -100,45 +101,63 @@ task_handler_t cmd_handler(const char *cmd)
 
 int handle_ls(int fd, int argc, char *argv[])
 {
+    // TODO: 实现 ls
+    printf("ls\n");
     return 0;
 }
 
 int handle_cd(int fd, int argc, char *argv[])
 {
+    // TODO: 实现 cd
+    printf("cd\n");
     return 0;
 }
 
 int handle_pwd(int fd, int argc, char *argv[])
 {
+    // TODO: 实现 pwd
+    printf("pwd\n");
     return 0;
 }
 
 int handle_gets(int fd, int argc, char *argv[])
 {
+    // TODO: 实现 gets
+    printf("gets\n");
     return 0;
 }
 
 int handle_puts(int fd, int argc, char *argv[])
 {
+    // TODO: 实现 puts
+    printf("puts\n");
     return 0;
 }
 
 int handle_rm(int fd, int argc, char *argv[])
 {
+    // TODO: 实现 rm
+    printf("rm\n");
     return 0;
 }
 
 int handle_mkdir(int fd, int argc, char *argv[])
 {
+    // TODO: 实现 mkdir
+    printf("mkdir\n");
     return 0;
 }
 
 int handle_rmdir(int fd, int argc, char *argv[])
 {
+    // TODO: 实现 rmdir
+    printf("rmdir\n");
     return 0;
 }
 
 int handle_quit(int fd, int argc, char *argv[])
 {
+    // TODO: 实现 quit
+    printf("quit\n");
     return 0;
 }

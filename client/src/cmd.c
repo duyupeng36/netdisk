@@ -137,6 +137,10 @@ static bool is_valid_cmd(const char *cmd)
     {
         return true;
     }
+    if(strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0)
+    {
+        return true;
+    }
     return false;
 }
 
