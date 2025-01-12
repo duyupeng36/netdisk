@@ -39,7 +39,7 @@ typedef struct task_queue {
 } task_queue_t;
 
 struct task {
-    int fd;                // 文件描述符
+    int fd;                 // 网络通信的文件描述符
     int argc;               // 参数个数
     char **argv;            // 参数
     task_handler_t handler; // 任务处理函数

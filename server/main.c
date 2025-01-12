@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include <sys/sysinfo.h>
 #include <sys/socket.h>
@@ -95,6 +96,19 @@ int main(int argc, char *argv[])
         // 循环处理事件
         for (int i = 0; i < readyNumber; i++)
         {
+            if (events[i].events & EPOLLRDHUP)
+            {
+                // 客户端断开连接
+                if (epoll_del(epfd, events[i].data.fd) == -1)
+                {
+                    fprintf(stderr, "Failed to delete fd from epoll\n");
+                    return 1;
+                }
+                close(events[i].data.fd);
+                monitorNumber--;
+                continue;  // 检查下一个就绪事件
+            }
+            
             if (events[i].data.fd == sockfd)
             {
                 // 有新的客户端连接
@@ -105,7 +119,7 @@ int main(int argc, char *argv[])
                     return 1;
                 }
                 // 添加新的客户端连接到 epoll 实例
-                if (epoll_add(epfd, netfd, EPOLLIN | EPOLLHUP) == -1)
+                if (epoll_add(epfd, netfd, EPOLLIN | EPOLLRDHUP) == -1)
                 {
                     fprintf(stderr, "Failed to add netfd to epoll\n");
                     return 1;

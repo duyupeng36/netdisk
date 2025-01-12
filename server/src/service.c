@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <shadow.h>
+
 #define _DEFAULT_SOURCE  /* Since glibc 2.28*/
 #include <crypt.h>
 

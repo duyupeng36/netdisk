@@ -2,6 +2,7 @@
 #define SERVICE_H
 
 #include "task.h"
+#include "cwd.h"
 
 /**
  * @brief receive command from client

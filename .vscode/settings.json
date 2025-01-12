@@ -24,6 +24,8 @@
         "unistd.h": "c",
         "shadow.h": "c",
         "cmd.h": "c",
-        "auth.h": "c"
-    }
+        "auth.h": "c",
+        "cwd.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }
