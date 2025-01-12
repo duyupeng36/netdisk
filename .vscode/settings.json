@@ -22,6 +22,8 @@
         "service.h": "c",
         "malloc.h": "c",
         "unistd.h": "c",
-        "shadow.h": "c"
+        "shadow.h": "c",
+        "cmd.h": "c",
+        "auth.h": "c"
     }
 }

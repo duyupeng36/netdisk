@@ -23,5 +23,4 @@ int epoll_add(int epfd, int fd, uint32_t events);
  */
 int epoll_del(int epfd, int fd);
 
-
 #endif

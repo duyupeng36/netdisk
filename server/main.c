@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
                     return 1;
                 }
                 // 添加新的客户端连接到 epoll 实例
-                if (epoll_add(epfd, netfd, EPOLLIN) == -1)
+                if (epoll_add(epfd, netfd, EPOLLIN | EPOLLHUP) == -1)
                 {
                     fprintf(stderr, "Failed to add netfd to epoll\n");
                     return 1;
