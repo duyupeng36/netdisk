@@ -2,7 +2,6 @@
 #define SERVICE_H
 
 #include "task.h"
-#include "cwd.h"
 
 /**
  * @brief receive command from client
@@ -31,24 +30,24 @@ task_handler_t cmd_handler(const char *cmd);
  * @param argv the arguments. argv[0] is the command, and the others are the arguments
  * @return int  0 on success, -1 on error
  */
-int handle_login(int fd, int argc, char *argv[]);
+int handle_login(user_t *user, int argc, char *argv[]);
 
-int handle_ls(int fd, int argc, char *argv[]);
+int handle_ls(user_t *user, int argc, char *argv[]);
 
-int handle_cd(int fd, int argc, char *argv[]);
+int handle_cd(user_t *user, int argc, char *argv[]);
 
-int handle_pwd(int fd, int argc, char *argv[]);
+int handle_pwd(user_t *user, int argc, char *argv[]);
 
-int handle_gets(int fd, int argc, char *argv[]);
+int handle_gets(user_t *user, int argc, char *argv[]);
 
-int handle_puts(int fd, int argc, char *argv[]);
+int handle_puts(user_t *user, int argc, char *argv[]);
 
-int handle_rm(int fd, int argc, char *argv[]);
+int handle_rm(user_t *user, int argc, char *argv[]);
 
-int handle_mkdir(int fd, int argc, char *argv[]);
+int handle_mkdir(user_t *user, int argc, char *argv[]);
 
-int handle_rmdir(int fd, int argc, char *argv[]);
+int handle_rmdir(user_t *user, int argc, char *argv[]);
 
-int handle_quit(int fd, int argc, char *argv[]);
+int handle_quit(user_t *user, int argc, char *argv[]);
 
 #endif // SERVICE_H

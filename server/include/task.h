@@ -4,6 +4,8 @@
 #include <pthread.h>
 #include <stdint.h>
 
+#include "auth.h"
+
 #define MAX_TASK_QUEUE_SIZE 1024
 
 typedef struct task task_t;
@@ -16,7 +18,7 @@ typedef struct task task_t;
  * @param argv the arguments. argv[0] is the command, and the others are the arguments
  * @return on success, return 0; on error, return -1
  */
-typedef int(*task_handler_t)(int fd, int argc, char *argv[]);
+typedef int(*task_handler_t)(user_t *user, int argc, char *argv[]);
 
 /**
  * @brief task queue structure
@@ -39,7 +41,7 @@ typedef struct task_queue {
 } task_queue_t;
 
 struct task {
-    int fd;                 // 网络通信的文件描述符
+    user_t *user;                 // 网络通信的文件描述符
     int argc;               // 参数个数
     char **argv;            // 参数
     task_handler_t handler; // 任务处理函数
@@ -64,7 +66,7 @@ int task_queue_init(task_queue_t * queue);
  * @param handler the task handler function
  * @return on success, return 0; on error, return -1
  */
-int task_queue_push(task_queue_t * queue, int fd, int argc, char *argv[], task_handler_t handler);
+int task_queue_push(task_queue_t * queue, user_t *user, int argc, char *argv[], task_handler_t handler);
 
 /**
  * @brief pop a task from the task queue

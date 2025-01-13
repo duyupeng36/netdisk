@@ -107,69 +107,72 @@ task_handler_t cmd_handler(const char *cmd)
     }
 }
 
-int handle_login(int fd, int argc, char *argv[]) {
+int handle_login(user_t *user, int argc, char *argv[]) {
     // TODO: 实现 login
     printf("login\n");
+    user->status = USER_LOINGED;
+    user->username = "dyp";
     return 0;
 }
 
-int handle_ls(int fd, int argc, char *argv[])
+int handle_ls(user_t *user, int argc, char *argv[])
 {
     // TODO: 实现 ls
     printf("ls\n");
+    printf("username: %s\n", user->username);
     return 0;
 }
 
-int handle_cd(int fd, int argc, char *argv[])
+int handle_cd(user_t *user, int argc, char *argv[])
 {
     // TODO: 实现 cd
     printf("cd\n");
     return 0;
 }
 
-int handle_pwd(int fd, int argc, char *argv[])
+int handle_pwd(user_t *user, int argc, char *argv[])
 {
     // TODO: 实现 pwd
     printf("pwd\n");
     return 0;
 }
 
-int handle_gets(int fd, int argc, char *argv[])
+int handle_gets(user_t *user, int argc, char *argv[])
 {
     // TODO: 实现 gets
     printf("gets\n");
     return 0;
 }
 
-int handle_puts(int fd, int argc, char *argv[])
+int handle_puts(user_t *user, int argc, char *argv[])
 {
     // TODO: 实现 puts
     printf("puts\n");
     return 0;
 }
 
-int handle_rm(int fd, int argc, char *argv[])
+int handle_rm(user_t *user, int argc, char *argv[])
 {
     // TODO: 实现 rm
     printf("rm\n");
     return 0;
 }
 
-int handle_mkdir(int fd, int argc, char *argv[])
+int handle_mkdir(user_t *user, int argc, char *argv[])
 {
     // TODO: 实现 mkdir
     printf("mkdir\n");
     return 0;
 }
 
-int handle_rmdir(int fd, int argc, char *argv[])
+int handle_rmdir(user_t *user, int argc, char *argv[])
 {
     // TODO: 实现 rmdir
     printf("rmdir\n");
     return 0;
 }
 
-int handle_quit(int fd, int argc, char *argv[])
+int handle_quit(user_t *user, int argc, char *argv[])
 {
     // TODO: 实现 quit
     printf("quit\n");

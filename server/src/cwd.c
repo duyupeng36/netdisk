@@ -40,6 +40,7 @@ int cwd_push(cwd_t *cwd, const char *path) {
         return -1;
     }
     strncpy(cwd->path[cwd->top], path, strlen(path) + 1);
+    cwd->path[cwd->top][strlen(path)] = '\0';
     return 0;
 }
 

@@ -4,6 +4,7 @@
 
 #include "task.h"
 
+
 /**
  * @brief create a task, and return the pointer to the task
  * 
@@ -13,7 +14,7 @@
  * @param handler the task handler function
  * @return task_t* the pointer to the task，on error, return NULL
  */
-static task_t * task_create(int fd, int argc, char *argv[], task_handler_t handler);
+static task_t * task_create(user_t *user, int argc, char *argv[], task_handler_t handler);
 
 /**
  * @brief destroy a task
@@ -41,11 +42,11 @@ int task_queue_init(task_queue_t * queue) {
     return 0;
 }
 
-int task_queue_push(task_queue_t * queue, int fd, int argc, char *argv[], task_handler_t handler) {
+int task_queue_push(task_queue_t * queue, user_t *user, int argc, char *argv[], task_handler_t handler) {
     if(queue == NULL) {
         return -1;
     }
-    task_t *t = task_create(fd, argc, argv, handler);
+    task_t *t = task_create(user, argc, argv, handler);
     if(t == NULL) {
         return -1;
     }
@@ -135,8 +136,6 @@ int task_queue_destroy(task_queue_t * queue) {
     while (queue->head != NULL)
     {
         task_t *tmp = queue->head;
-        // 关闭文件描述符
-        close(tmp->fd);
         queue->head = queue->head->next;
         // 释放任务
         task_destroy(tmp);
@@ -146,6 +145,7 @@ int task_queue_destroy(task_queue_t * queue) {
     if(pthread_mutex_destroy(&queue->mutex) != 0) {
         return -1;
     }
+
     // 销毁条件变量
     if(pthread_cond_destroy(&queue->cond) != 0) {
         return -1;
@@ -154,12 +154,12 @@ int task_queue_destroy(task_queue_t * queue) {
 }
 
 
-task_t * task_create(int fd, int argc, char *argv[], task_handler_t handler) {
+task_t * task_create(user_t *user, int argc, char *argv[], task_handler_t handler) {
     task_t *t = (task_t *)malloc(sizeof(task_t));
     if(t == NULL) {
         return NULL;
     }
-    t->fd = fd;
+    t->user = user;
     t->argc = argc;
 
     // 为参数列表分配内存

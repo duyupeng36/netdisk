@@ -13,6 +13,7 @@
 #include "epoll.h"
 #include "pool.h"
 #include "service.h"
+#include "auth.h"
 
 #define CONFIG_PATH "config/config.toml"
 
@@ -77,6 +78,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // 创建用户表
+    user_table_t *user_table = user_table_init(1024);
+    if (user_table == NULL)
+    {
+        fprintf(stderr, "Failed to create user table\n");
+        return 1;
+    }
+
     // 监控文件描述符个数
     int monitorNumber = 1;
     // 就像数组大小
@@ -109,6 +118,7 @@ int main(int argc, char *argv[])
                 continue;  // 检查下一个就绪事件
             }
             
+            // events[i].events & EPOLLIN
             if (events[i].data.fd == sockfd)
             {
                 // 有新的客户端连接
@@ -116,6 +126,12 @@ int main(int argc, char *argv[])
                 if (netfd == -1)
                 {
                     fprintf(stderr, "Failed to accept\n");
+                    return 1;
+                }
+                // 添加新的客户端到用户表
+                if (user_table_add(user_table, netfd) == -1)
+                {
+                    fprintf(stderr, "Failed to add user to user table\n");
                     return 1;
                 }
                 // 添加新的客户端连接到 epoll 实例
@@ -153,7 +169,15 @@ int main(int argc, char *argv[])
                     fprintf(stderr, "Invalid command\n");
                     return 1;
                 }
-                task_queue_push(&task_queue, events[i].data.fd, argc, args, handler);
+                // 从用户表中获取用户
+                user_t *user = user_table_get(user_table, events[i].data.fd);
+                task_queue_push(&task_queue, user, argc, args, handler);
+                // 释放参数
+                for (int i = 0; i < argc; i++)
+                {
+                    free(args[i]);
+                }
+                free(args);
             }
         }
     }

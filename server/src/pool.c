@@ -15,13 +15,13 @@ static void *routine(void *arg) {
             fprintf(stderr, "get task error\n");
             continue;
         }
-        fprintf(stdout, "Thread[TID %#lx] is handling task for fd: %d\n", (long int)pthread_self(), task.fd);
-        if(task.handler(task.fd, task.argc, task.argv) == -1) {
+        fprintf(stdout, "Thread[TID %#lx] is handling task for fd: %d\n", (long int)pthread_self(), task.user->fd);
+        if(task.handler(task.user, task.argc, task.argv) == -1) {
             // handle error
-            fprintf(stderr, "handle error for fd: %d\n", task.fd);
+            fprintf(stderr, "handle error for fd: %d\n", task.user->fd);
             continue;
         }
-        fprintf(stdout, "Thread[TID %#lx] has handled task for fd: %d\n", (long int)pthread_self(), task.fd);
+        fprintf(stdout, "Thread[TID %#lx] has handled task for fd: %d\n", (long int)pthread_self(), task.user->fd);
     }
     return NULL;
 }
