@@ -1,6 +1,15 @@
-
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <shadow.h>
+#include <crypt.h>
+
 #include "work.h"
+
+#define OPTPARSE_IMPLEMENTATION
+#include "optparse.h"
 
 /**
  * @brief 登陆服务器
@@ -144,8 +153,59 @@ int execute_task(task_t *task) {
     return 0;
 }
 
+struct message {
+    enum message_type {
+        MESSAGE_ERROR,
+        MESSAGE_SUCCESS
+    } type;
+    int message_length;
+    char *message;
+};
+
 int task_login(int fd, int argc, char *argv[]) {
-    printf("login\n");
+    // 客户端发送的登陆命令格式为 {login -u username -p password}
+    // 调用 optparse 处理命令行参数
+    char *username = NULL;
+    char *password = NULL;
+    struct optparse options;
+    int option;
+    optparse_init(&options, argv);
+    while((option = optparse(&options, "u:p:")) != -1) {
+        switch(option) {
+            case 'u':
+                username = options.optarg;
+                break;
+            case 'p':
+                password = options.optarg;
+                break;
+            case '?':
+                // 参数错误
+                // struct message msg = {MESSAGE_ERROR, 0, "Invalid argument"};        
+                break;
+            default:
+                break;
+        }
+    }
+    printf("username: %s, password: %s\n", username, password);
+    // 校验用户名和密码
+    struct  spwd *sp = getspnam(username);
+    if(sp == NULL) {
+        // 用户名不存在
+        // struct message msg = {MESSAGE_ERROR, 0, "Username does not exist"};
+        return -1;
+    }
+    // 加密码密码
+    struct crypt_data data;
+    char *encrypted_password = crypt_r(password, sp->sp_pwdp, &data);
+    
+    if(strcmp(encrypted_password, sp->sp_pwdp) != 0) {
+        // 密码错误
+        // struct message msg = {MESSAGE_ERROR, 0, "Password error"};
+        return -1;
+    }
+    // 登陆成功
+    // struct message msg = {MESSAGE_SUCCESS, 0, "Login success"};
+    printf("login success\n");
     return 0;
 }
 

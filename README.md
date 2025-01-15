@@ -54,6 +54,16 @@
 
 ## 客户端
 
+客户端启动时就需要 **连接服务端**，然后进行 **用户认证** 或 **注册用户**
++ 连接服务端相关的函数参考 [tcp.h](./client/include/tcp.h) 和 [tcp.c](./client/src/tcp.c)
+
++ 认证相关的函数参考 [authenticat.h](./client/include/authenticat.h) 和 [authenticat.c](./client/src/authenticat.c)
+
+> 用户注册完成时，自动进入认证成功状态
+
+
+用户认证成功之后，进行 **类似于 shell 的界面**，然后等待用户输入命令。每当用户完成命令输入后，客户端应该验证命令是否支持，然后根据命令调用函数与服务端进行通信
+
 
 
 

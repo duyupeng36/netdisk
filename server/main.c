@@ -74,12 +74,12 @@ int main(int argc, char *argv[]) {
         for(int i = 0; i < readyNumber; i++) {
             if(events[i].events & EPOLLRDHUP) {
                 // 客户端断开连接
-                // 关闭连接
-                close(events[i].data.fd);
                 // 从 epoll 中删除
                 if(epoll_del(epfd, events[i].data.fd) == -1) {
                     fprintf(stderr, "delete connection from epoll failed\n");
                 }
+                // 关闭连接
+                close(events[i].data.fd);
                 // 处理下一个就绪事件
                 continue;
             }
