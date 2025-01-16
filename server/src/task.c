@@ -1,10 +1,13 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "task.h"
 #include "cmd.h"
 
+#define OPTPARSE_IMPLEMENTATION
+#include "optparse.h"
 
 task_t *parse_task(int fd, const char *command)
 {
@@ -14,7 +17,7 @@ task_t *parse_task(int fd, const char *command)
         return NULL;
     }
     task->fd = fd;
-    task->argv = parse_command(command, &task->argc);
+    task->argv = command_parse(command, &task->argc);
     if (task->argv == NULL)
     {
         free(task);
@@ -71,7 +74,7 @@ task_t *parse_task(int fd, const char *command)
         free_task(task);
         return NULL;
     }
-    
+
     return task;
 }
 
@@ -83,8 +86,148 @@ void free_task(task_t *task)
     }
     // 释放每个参数
     free_argv(task->argv);
-    // 释放参数数组
-    free(task->argv);
     // 释放任务结构体
     free(task);
+}
+
+int execute_task(task_t *task)
+{
+    switch (task->type)
+    {
+    case TASK_LOGIN: // 登陆任务
+        return task_login(task->fd, task->argc, task->argv);
+    case TASK_REGISTER: // 注册任务
+        return task_register(task->fd, task->argc, task->argv);
+    case TASK_MKDIR: // 创建目录任务
+        return task_mkdir(task->fd, task->argc, task->argv);
+    case TASK_RMDIR: // 删除目录任务
+        return task_rmdir(task->fd, task->argc, task->argv);
+    case TASK_CD: // 切换目录任务
+        return task_cd(task->fd, task->argc, task->argv);
+    case TASK_PWD: // 显示当前目录任务
+        return task_pwd(task->fd, task->argc, task->argv);
+    case TASK_LS: // 列出文件任务
+        return task_ls(task->fd, task->argc, task->argv);
+    case TASK_GETS: // 下载文件任务
+        return task_gets(task->fd, task->argc, task->argv);
+    case TASK_PUTS: // 上传文件任务
+        return task_puts(task->fd, task->argc, task->argv);
+    case TASK_REMOVE: // 删除文件任务
+        return task_remove(task->fd, task->argc, task->argv);
+    case TASK_QUIT: // 退出任务
+        return task_quit(task->fd, task->argc, task->argv);
+    default:
+        return -1;
+    }
+    return 0;
+}
+
+int task_login(int fd, int argc, char *argv[])
+{
+    for (int i = 0; i < argc; i++)
+    {
+        printf("argv[%d]: %s\n", i, argv[i]);
+    }
+
+    return 0;
+}
+
+int task_register(int fd, int argc, char *argv[])
+{
+    for (int i = 0; i < argc; i++)
+    {
+        printf("argv[%d]: %s\n", i, argv[i]);
+    }
+
+    return 0;
+}
+
+int task_mkdir(int fd, int argc, char *argv[])
+{
+    for (int i = 0; i < argc; i++)
+    {
+        printf("argv[%d]: %s\n", i, argv[i]);
+    }
+
+    return 0;
+}
+
+int task_rmdir(int fd, int argc, char *argv[])
+{
+    for (int i = 0; i < argc; i++)
+    {
+        printf("argv[%d]: %s\n", i, argv[i]);
+    }
+
+    return 0;
+}
+
+int task_cd(int fd, int argc, char *argv[])
+{
+    for (int i = 0; i < argc; i++)
+    {
+        printf("argv[%d]: %s\n", i, argv[i]);
+    }
+
+    return 0;
+}
+
+int task_pwd(int fd, int argc, char *argv[])
+{
+    for (int i = 0; i < argc; i++)
+    {
+        printf("argv[%d]: %s\n", i, argv[i]);
+    }
+
+    return 0;
+}
+
+int task_ls(int fd, int argc, char *argv[])
+{
+    for (int i = 0; i < argc; i++)
+    {
+        printf("argv[%d]: %s\n", i, argv[i]);
+    }
+
+    return 0;
+}
+
+int task_gets(int fd, int argc, char *argv[])
+{
+    for (int i = 0; i < argc; i++)
+    {
+        printf("argv[%d]: %s\n", i, argv[i]);
+    }
+
+    return 0;
+}
+
+int task_puts(int fd, int argc, char *argv[])
+{
+    for (int i = 0; i < argc; i++)
+    {
+        printf("argv[%d]: %s\n", i, argv[i]);
+    }
+
+    return 0;
+}
+
+int task_remove(int fd, int argc, char *argv[])
+{
+    for (int i = 0; i < argc; i++)
+    {
+        printf("argv[%d]: %s\n", i, argv[i]);
+    }
+
+    return 0;
+}
+
+int task_quit(int fd, int argc, char *argv[])
+{
+    for (int i = 0; i < argc; i++)
+    {
+        printf("argv[%d]: %s\n", i, argv[i]);
+    }
+
+    return 0;
 }

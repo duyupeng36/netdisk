@@ -12,7 +12,7 @@
 
 int command_read(command_t *command)
 {
-    char command_buffer[2048];
+    char command_buffer[2048] = {0};
     fgets(command_buffer, sizeof(command_buffer), stdin);
     command->command_length = strlen(command_buffer);
     command->command = malloc((command->command_length + 1) * sizeof(char));

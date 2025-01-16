@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+        ".gitignore": "ignore",
+        "cmd.h": "c",
+        "queue.h": "c",
+        "pool.h": "c",
+        "work.h": "c",
+        "pthread.h": "c",
+        "task.h": "c",
+        "*.tcc": "c",
+        "forward_list": "c",
+        "list": "c",
+        "stdlib.h": "c",
+        "string.h": "c"
+    }
+}

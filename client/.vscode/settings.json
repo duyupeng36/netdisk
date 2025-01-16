@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        ".gitignore": "ignore",
+        "tcp.h": "c",
+        "cmd.h": "c"
+    }
+}

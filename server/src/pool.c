@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "work.h"
-
-#include "thread_pool.h"
+#include "pool.h"
 
 static void * routine(void *arg) {
     thread_pool_t *pool = (thread_pool_t *)arg;
@@ -14,7 +12,13 @@ static void * routine(void *arg) {
             continue;
         }
         printf("thread %#lx is executing task on connected socket %d\n", pthread_self(), task->fd);
-        execute_task(task);  // 指向任务
+        if( execute_task(task) == -1) {
+            free_task(task);
+            fprintf(stderr, "execute task failed\n");
+            continue;  // 继续执行下一个任务
+        }
+        free_task(task);
+        printf("execute task success\n");
     }
     return NULL;
 }

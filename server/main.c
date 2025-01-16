@@ -4,13 +4,16 @@
 #include <stdbool.h>
 #include <unistd.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+
 #include "tcp.h"
 #include "config.h"
 #include "epoll.h"
 #include "cmd.h"
 #include "task.h"
 #include "queue.h"
-#include "thread_pool.h"
+#include "pool.h"
 
 #define CONFIG_FILE "config/config.toml"
 
@@ -48,7 +51,7 @@ int main(int argc, char *argv[]) {
     }
 
     // 创建任务队列
-    task_queue_t *queue = task_queue_crate(10);  // 创建一个大小为 2^10 的队列
+    task_queue_t *queue = task_queue_crate(1);  // 创建一个大小为 2^10 的队列
     if(queue == NULL) {
         fprintf(stderr, "create task queue failed\n");
         return 1;
@@ -97,7 +100,7 @@ int main(int argc, char *argv[]) {
                 }
             } else {
                 // 读取命令字符串
-                const char *command = read_command(events[i].data.fd);
+                const char *command = command_read(events[i].data.fd);
                 if(command == NULL) {
                     // 命令读取失败：继续处理下一个事件
                     continue;
@@ -105,7 +108,7 @@ int main(int argc, char *argv[]) {
                 // 创建任务
                 task_t *task = parse_task(events[i].data.fd, command);
                 // 释放命令字符串
-                free_command(command);
+                command_free(command);
                 // 将任务入队
                 if(task_queue_enqueue(queue, task) == -1) {
                     fprintf(stderr, "enqueue task failed\n");

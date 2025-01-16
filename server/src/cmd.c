@@ -6,8 +6,9 @@
 #include <sys/socket.h>
 
 #include "cmd.h"
+#include "tcp.h"
 
-const char *read_command(int fd) {
+const char *command_read(int fd) {
     int size;
     if(recv(fd, &size, sizeof(int), MSG_WAITALL) != sizeof(int)) {
         return NULL;
@@ -16,7 +17,7 @@ const char *read_command(int fd) {
     if(command == NULL) {
         return NULL;
     }
-    if(recv(fd, command, size, MSG_WAITALL) != size) {
+    if(recvn(fd, command, size) != size) {
         free(command);
         return NULL;
     }
@@ -24,11 +25,11 @@ const char *read_command(int fd) {
     return command;
 }
 
-void free_command(const char *command) {
+void command_free(const char *command) {
     free((void *)command);
 }
 
-char **parse_command(const char *command, int *argc)
+char **command_parse(const char *command, int *argc)
 {
     if (command == NULL || argc == NULL)
     {
