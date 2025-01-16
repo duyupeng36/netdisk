@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -8,9 +9,9 @@
 #include "cmd.h"
 #include "tcp.h"
 
-const char *command_read(int fd) {
-    int size;
-    if(recv(fd, &size, sizeof(int), MSG_WAITALL) != sizeof(int)) {
+const char *command_recv(int fd) {
+    size_t size;
+    if(recvn(fd, &size, sizeof(size_t)) != sizeof(size_t)) {
         return NULL;
     }
     char *command = (char *)malloc(size + 1);

@@ -3,6 +3,10 @@
         ".gitignore": "ignore",
         "tcp.h": "c",
         "cmd.h": "c",
-        "exchange.h": "c"
+        "exchange.h": "c",
+        "random": "cpp",
+        "response.h": "c",
+        "stdio.h": "c",
+        "cerrno": "c"
     }
 }

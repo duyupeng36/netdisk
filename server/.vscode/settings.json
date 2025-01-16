@@ -11,6 +11,14 @@
         "forward_list": "c",
         "list": "c",
         "stdlib.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "tcp.h": "c",
+        "message.h": "c",
+        "cwd.h": "c",
+        "connection.h": "c",
+        "fstream": "c",
+        "cerrno": "c",
+        "stdio.h": "c",
+        "ctype.h": "c"
     }
 }

@@ -3,7 +3,7 @@
 #include "authenticat.h"
 
 typedef struct command {
-    int command_length;
+    size_t command_length;
     char *command;
 } command_t;
 

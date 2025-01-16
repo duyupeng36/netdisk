@@ -8,13 +8,15 @@
 #include "task.h"
 #include "cmd.h"
 #include "tcp.h"
-#include "exchange.h"
+#include "message.h"
+#include "connection.h"
 
 #define MESSAGE_TEMPLATE "{\"type\": \"%s\", \"%s\": \"%s\", \"%s\": \"%s\"}"
 #define MESSAGE_LENGTH 4096
 
 #define OPTPARSE_IMPLEMENTATION
 #include "optparse.h"
+
 
 task_t *parse_task(int fd, const char *command)
 {
@@ -131,6 +133,13 @@ int execute_task(task_t *task)
 
 int task_login(int fd, int argc, char *argv[])
 {
+    extern connect_table_t *connections;
+    // 查找当前连接
+    connection_t *conn = NULL;
+    if(connect_table_find(connections, fd, &conn) != 0) {
+        printf("find connection failed\n");
+        return -1;
+    }
     char message[MESSAGE_LENGTH] = {0};
 
     char *username = NULL;
@@ -157,6 +166,7 @@ int task_login(int fd, int argc, char *argv[])
             break;
         }
     }
+
     // 获取用户名对应的密码
     struct spwd *sp = getspnam(username);
     if(sp == NULL) {
@@ -176,11 +186,26 @@ int task_login(int fd, int argc, char *argv[])
         message_send(fd, message);
         return -1;
     }
+
     // 登陆成功
-    snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "success", "cwd", "/", "token", username);
-    printf("message: %s\n", message);
+    // 设置连接的用户名
+    strcpy(conn->username, username);
+    // 设置连接的 token
+    snprintf(conn->token, 128, "%s:%s", username, "123456");
+    
+    // 获取当前工作目录
+    char cwd[2048] = {0};
+    if(cwd_pwd(conn->cwd, cwd, 2048) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "get current working directory error", "example", "login -u username -p password");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "success", "cwd", cwd, "token", username);
     // 发送消息
-    message_send(fd, message);
+   if( message_send(fd, message) != 0) {
+         return -1;
+   }
     return 0;
 }
 
@@ -216,11 +241,43 @@ int task_rmdir(int fd, int argc, char *argv[])
 
 int task_cd(int fd, int argc, char *argv[])
 {
-    for (int i = 0; i < argc; i++)
-    {
-        printf("argv[%d]: %s\n", i, argv[i]);
+    char message[MESSAGE_LENGTH] = {0};
+    if(argc != 2) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "missing argument", "example", "cd [dir]");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
     }
-
+    extern connect_table_t *connections;
+    // 查找当前连接
+    connection_t *conn = NULL;
+    if(connect_table_find(connections, fd, &conn) != 0) {
+        printf("find connection failed\n");
+        return -1;
+    }
+    printf("connection:%p\n", conn);
+  
+    // 切换目录
+    if(cwd_push(conn->cwd, argv[1]) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "change directory failed", "example", "cd [dir]");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    printf("change directory success\n");
+    
+    // 获取当前工作目录
+    char cwd[2048] = {0};
+    if(cwd_pwd(conn->cwd, cwd, 2048) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "get current working directory error", "example", "cd [dir]");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    printf("current working directory: %s\n", cwd);
+    snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "success", "cwd", cwd, "example", "cd [dir]");
+    // 发送消息
+    message_send(fd, message);
     return 0;
 }
 

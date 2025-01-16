@@ -8,12 +8,12 @@
  * @param fd 文件描述符
  * @return char* 成功返回命令字符串，失败返回 NULL
  */
-const char *command_read(int fd);
+const char *command_recv(int fd);
 
 /**
  * @brief 释放 command 字符串
  * 
- * @param command 命令字符串，必须是通过 command_read 函数获取的
+ * @param command 命令字符串，必须是通过 command_recv 函数获取的
  */
 void command_free(const char *command);
 

@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <string.h>
+#include <stdio.h>
 #include <errno.h>
 
 #include <sys/types.h>
@@ -54,6 +55,7 @@ int sendn(int fd, const void *buf, size_t n) {
             return -1;
         }
         totalSend += numSend;
+        printf("send %ld bytes\n", totalSend);
     }
     return totalSend;
 }

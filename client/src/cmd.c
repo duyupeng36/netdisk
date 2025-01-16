@@ -6,14 +6,17 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <json-c/json.h>
 
 #include "cmd.h"
 #include "tcp.h"
+#include "response.h"
 
 int command_read(command_t *command)
 {
     char command_buffer[2048] = {0};
     fgets(command_buffer, sizeof(command_buffer), stdin);
+    command_buffer[strlen(command_buffer)] = '\0';
     command->command_length = strlen(command_buffer);
     command->command = malloc((command->command_length + 1) * sizeof(char));
     if (command->command == NULL)
@@ -86,7 +89,8 @@ static bool is_valid_command(const char *command)
     return false;
 }
 
-void command_free(command_t *command) {
+void command_free(command_t *command)
+{
     free(command->command);
 }
 
@@ -99,22 +103,61 @@ int command_send(int fd, command_t *command)
         return -1;
     }
     // 发送命令长度 : int sendn(int fd, const void *buf, size_t n)
-    if(sendn(fd, &command->command_length, sizeof(command->command_length)) != sizeof(command->command_length)) {
+    if (sendn(fd, &command->command_length, sizeof(command->command_length)) != sizeof(command->command_length))
+    {
         return -1;
     }
     // 发送命令字符串
-    if(sendn(fd, command->command, command->command_length) != command->command_length) {
+    if (sendn(fd, command->command, command->command_length) != command->command_length)
+    {
         return -1;
     }
     return 0;
 }
 
-int command_execute(int fd, command_t *command, struct state *state) {
+int command_execute(int fd, command_t *command, struct state *state)
+{
     // 发送命令
-    if(command_send(fd, command) == -1) {
+    if (command_send(fd, command) == -1)
+    {
         return -1;
     }
-    // 等待命令的响应：可能涉及修改客户端状态
-    
-    return 0;
+
+    // 接收命令执行结果
+    if (strncmp(command->command, "mkdir", 5) == 0)
+    {
+        return response_mkdir(fd, state);
+    }
+    if (strncmp(command->command, "rmdir", 5) == 0)
+    {
+        return response_rmdir(fd, state);
+    }
+    if (strncmp(command->command, "ls", 2) == 0)
+    {
+        return response_ls(fd, state);
+    }
+    if (strncmp(command->command, "cd", 2) == 0)
+    {
+        return response_cd(fd, state);
+    }
+    if (strncmp(command->command, "pwd", 3) == 0)
+    {
+        return response_pwd(fd, state);
+    }
+
+    if (strncmp(command->command, "gets", 4) == 0)
+    {
+        return response_gets(fd, state);
+    }
+    if (strncmp(command->command, "puts", 4) == 0)
+    {
+        return response_puts(fd, state);
+    }
+
+    if (strncmp(command->command, "remove", 6) == 0)
+    {
+        return response_remove(fd, state);
+    }
+
+    return -1;
 }

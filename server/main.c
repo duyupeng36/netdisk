@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -14,8 +15,11 @@
 #include "task.h"
 #include "queue.h"
 #include "pool.h"
+#include "connection.h"
 
 #define CONFIG_FILE "config/config.toml"
+
+connect_table_t *connections;
 
 int main(int argc, char *argv[]) {
     if(argc>1 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {
@@ -29,6 +33,13 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "parse config file failed\n");
         return 1;
     }
+
+    // 初始化连接表
+    if(connect_table_create(&connections, 1023) == -1) {
+        fprintf(stderr, "create connection table failed\n");
+        return 1;
+    }
+
     // 创建监听套接字
     int sockfd = tcp_listen(server_config.hostname, server_config.service);
     if (sockfd == -1) {
@@ -81,6 +92,7 @@ int main(int argc, char *argv[]) {
                 if(epoll_del(epfd, events[i].data.fd) == -1) {
                     fprintf(stderr, "delete connection from epoll failed\n");
                 }
+                printf("client disconnected: %d\n", events[i].data.fd);
                 // 关闭连接
                 close(events[i].data.fd);
                 // 处理下一个就绪事件
@@ -97,21 +109,41 @@ int main(int argc, char *argv[]) {
                 if(epoll_add(epfd, connfd, EPOLLIN | EPOLLRDHUP) == -1) {
                     fprintf(stderr, "add connection to epoll failed\n");
                     close(connfd);
+                    continue;  // 处理下一个就绪事件
+                }
+                // 将连接添加到连接表
+                connection_t *conn;
+                if(connction_create(&conn, connfd) == -1) {
+                    fprintf(stderr, "create connection failed\n");
+                    close(connfd);
+                    continue;  // 处理下一个就绪事件
+                }
+                if(connect_table_insert(connections, conn) == -1) {
+                    fprintf(stderr, "insert connection to table failed\n");
+                    close(connfd);
+                    continue;  // 处理下一个就绪事件
                 }
             } else {
                 // 读取命令字符串
-                const char *command = command_read(events[i].data.fd);
+                const char *command = command_recv(events[i].data.fd);
                 if(command == NULL) {
                     // 命令读取失败：继续处理下一个事件
                     continue;
                 }
                 // 创建任务
                 task_t *task = parse_task(events[i].data.fd, command);
+                if(task == NULL) {
+                    fprintf(stderr, "parse task failed\n");
+                    // 释放命令字符串
+                    command_free(command);
+                    continue;
+                }
+                printf("task at %p\n", task);
                 // 释放命令字符串
                 command_free(command);
                 // 将任务入队
                 if(task_queue_enqueue(queue, task) == -1) {
-                    fprintf(stderr, "enqueue task failed\n");
+                    fprintf(stderr, "enqueue task failed: %s\n", strerror(errno));
                     free_task(task);
                 }
             }

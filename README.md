@@ -86,7 +86,23 @@ sudo pacman -S json-c
 
 每个客户端登陆的用户可能不同，现阶段我们假设只有一个用户。并借用 Linux 的用户管理进行用户认证
 
++ 客户端：[authenticat.h](./client/include/authenticat.h) 和 [authenticat.c](./client/src/authenticat.c)
++ 服务端：[task_login](./server/src/task.c)
 
+### cd 命令
 
+每次相应客户端的 `cd` 命令，服务端就需要为当前用户切换工作目录。因此，服务端需要维护一张 **连接表**，表中的项存储
++ 连接套接字 `fd`
++ 用户名 `username`
++ 当前目录 `cwd`
 
+当客户端请求 `cd` 的命令到达时，需要通过 `fd` 查询当前工作目录。为了方便通过 `connfd` 查找 `cwd`，我们将连接表实现为 **哈希表** 
+
+> 哈希冲突采用 **拉链法** 解决
+
+由于客户端可能多次调用 `cd` 命令，每次均需要修改 `cwd`。假设当前 `cwd = "/image"`
++ 如果客户端发送命令 `cd cartoon`，则服务端需要将 `cwd` 修改为 `"/image/cartoon"` 
++ 如果客户端发送命令 `cd ..`，则服务端需要将 `cwd` 修改为 `"/image"`
+
+显然，将 `cwd` 实现为一个 **栈** 可以更方便管理
 

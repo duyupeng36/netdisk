@@ -14,11 +14,11 @@ static void * routine(void *arg) {
         printf("thread %#lx is executing task on connected socket %d\n", pthread_self(), task->fd);
         if( execute_task(task) == -1) {
             free_task(task);
-            fprintf(stderr, "execute task failed\n");
+            printf("thread %#lx executed failed on connected socket %d\n", pthread_self(), task->fd);
             continue;  // 继续执行下一个任务
         }
+        printf("thread %#lx executed success on connected socket %d\n", pthread_self(), task->fd);
         free_task(task);
-        printf("execute task success\n");
     }
     return NULL;
 }

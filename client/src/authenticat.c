@@ -11,7 +11,7 @@
 #include "cmd.h"
 #include "tcp.h"
 #include "authenticat.h"
-#include "exchange.h"
+#include "message.h"
 
 
 /**
@@ -117,6 +117,7 @@ int sign_in(int fd, struct state *state)
     }
     // 判断返回的消息
     json_type type = json_object_get_type(root);
+
     switch (type)
     {
     case json_type_object:
@@ -144,7 +145,6 @@ int sign_in(int fd, struct state *state)
             strcpy(state->token, json_object_get_string(token));
             return 0;
         }
-        break;
     default:
         return -1;
     }

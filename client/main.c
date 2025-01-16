@@ -52,7 +52,6 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Failed to execute command\n");
             return 1;
         }
-
     }
 
     return 0;
