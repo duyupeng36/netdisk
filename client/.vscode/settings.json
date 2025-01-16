@@ -2,6 +2,7 @@
     "files.associations": {
         ".gitignore": "ignore",
         "tcp.h": "c",
-        "cmd.h": "c"
+        "cmd.h": "c",
+        "exchange.h": "c"
     }
 }

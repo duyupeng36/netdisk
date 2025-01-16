@@ -35,12 +35,12 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Failed to sign in or sign up\n");
         return 1;
     }
-    printf("Sign in or sign up successfully\n");
-
+    // 登陆成功：清除终端中的消息
+    printf("\033[2J\033[1;1H");
     // 开启一个循环，等待用户输入命令：展示一个类似于 shell 的提示符
     while (true)
     {
-        printf("%s@%s>", state.username, state.cwd);
+        printf("\n%s@%s>", state.username, state.cwd);
         struct command command;
         // 读取用户输入的命令
         if(command_read(&command) == -1) {

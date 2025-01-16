@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <termios.h>
+#include <json-c/json.h>
 
 #define _XOPEN_SOURCE
 #include <unistd.h>
@@ -10,6 +11,7 @@
 #include "cmd.h"
 #include "tcp.h"
 #include "authenticat.h"
+#include "exchange.h"
 
 
 /**
@@ -37,7 +39,7 @@ int sign(int fd, struct state *state)
     {
         int choice;
         success = false;
-        printf("1. Sign in\n2. Sign up\n");
+        printf("\nSign IN or Sign Up\n1. Sign in\n2. Sign up\n");
         printf("Please enter your choice: ");
         scanf("%d%*c", &choice);
         switch (choice)
@@ -102,8 +104,50 @@ int sign_in(int fd, struct state *state)
     if(command_send(fd, &command) == -1) {
         return -1;
     }
+    // 读取消息
+    char *message = NULL;
+    if(message_recv(fd, &message) == -1) {
+        return -1;
+    }
 
-    strncpy(state->cwd, "/", 64);
+    // 解析消息
+    json_object *root = json_tokener_parse(message);
+    if(root == NULL) {
+        return -1;
+    }
+    // 判断返回的消息
+    json_type type = json_object_get_type(root);
+    switch (type)
+    {
+    case json_type_object:
+        ///获取 type
+        json_object *type = json_object_object_get(root, "type");
+        if(type == NULL) {
+            return -1;
+        }
+        if(strcmp(json_object_get_string(type), "error") == 0) {
+            // 获取错误信息
+            json_object *error = json_object_object_get(root, "error");
+            if(error == NULL) {
+                return -1;
+            }
+            printf("Error: %s\n", json_object_get_string(error));
+            return -1;
+        } else if(strcmp(json_object_get_string(type), "success") == 0) {
+            // 获取成功信息 cwd 和 token
+            json_object *cwd = json_object_object_get(root, "cwd");
+            json_object *token = json_object_object_get(root, "token");
+            if(cwd == NULL || token == NULL) {
+                return -1;
+            }
+            strcpy(state->cwd, json_object_get_string(cwd));
+            strcpy(state->token, json_object_get_string(token));
+            return 0;
+        }
+        break;
+    default:
+        return -1;
+    }
     return 0;
 }
 

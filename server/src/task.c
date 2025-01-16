@@ -2,9 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <shadow.h>
+#include <crypt.h>
 
 #include "task.h"
 #include "cmd.h"
+#include "tcp.h"
+#include "exchange.h"
+
+#define MESSAGE_TEMPLATE "{\"type\": \"%s\", \"%s\": \"%s\", \"%s\": \"%s\"}"
+#define MESSAGE_LENGTH 4096
 
 #define OPTPARSE_IMPLEMENTATION
 #include "optparse.h"
@@ -124,11 +131,56 @@ int execute_task(task_t *task)
 
 int task_login(int fd, int argc, char *argv[])
 {
-    for (int i = 0; i < argc; i++)
-    {
-        printf("argv[%d]: %s\n", i, argv[i]);
-    }
+    char message[MESSAGE_LENGTH] = {0};
 
+    char *username = NULL;
+    char *password = NULL;
+
+    /* 参数解析 */
+    struct optparse options;
+    optparse_init(&options, argv);
+    int option;
+    while ((option = optparse(&options, "u:p:")) != -1)
+    {
+        switch (option)
+        {
+        case 'u':
+            username = options.optarg;
+            break;
+        case 'p':
+            password = options.optarg;
+            break;
+        case '?':
+            snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "unknown option", "example", "login -u username -p password");
+            // 发送消息
+            message_send(fd, message);
+            break;
+        }
+    }
+    // 获取用户名对应的密码
+    struct spwd *sp = getspnam(username);
+    if(sp == NULL) {
+        // 没有该用户
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "no such user", "example", "login -u username -p password");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    
+    struct crypt_data data;
+    char *encrypted = crypt_r(password, sp->sp_pwdp, &data);
+    if(strcmp(encrypted, sp->sp_pwdp) != 0) {
+        // 密码错误
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "password error", "example", "login -u username -p password");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    // 登陆成功
+    snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "success", "cwd", "/", "token", username);
+    printf("message: %s\n", message);
+    // 发送消息
+    message_send(fd, message);
     return 0;
 }
 

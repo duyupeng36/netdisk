@@ -7,7 +7,7 @@ CC := $(shell which gcc)
 # Compiler flags
 CFLAGS := -Wall -std=c17 -g -Og -Iinclude
 # Linker flags
-LDFLAGS := -lpthread -lcrypto -lmysqlclient
+LDFLAGS := -lpthread -lcrypto -lmysqlclient -ljson-c
 
 # Source files
 SRC := $(wildcard **/*.c) $(wildcard *.c)

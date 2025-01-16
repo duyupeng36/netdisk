@@ -10,6 +10,7 @@
 + IO 多路复用
 + [tomlc99](https://github.com/cktan/tomlc99)：[TOML](https://toml.io/cn/) 文件解析库
 + [optparse](https://github.com/skeeto/optparse)：命令行选项解析库， `getopt()` 的可重入替代
++ [json-c](https://github.com/json-c/json-c) JSON 序列化和反序列化
 
 ## 服务段架构
 
@@ -64,10 +65,22 @@
 
 用户认证成功之后，进行 **类似于 shell 的界面**，然后等待用户输入命令。每当用户完成命令输入后，客户端应该验证命令是否支持，然后根据命令调用函数与服务端进行通信
 
-
-
-
 ## 功能实现
+
+### 客户端与服务端之间的信息交换
+
+客户端与服务端需要交换信息。为了能够方便获取信息内容，应该将信息组织为一定的格式。这样就能保证信息交换的快速与正确。
+
+有许多用于信息交换的格式
++ [JSON](https://www.json.org/json-zh.html) 
++ [MessagePack](https://msgpack.org/)
+
+该项目采用 [JSON](https://www.json.org/json-zh.html)  作为信息交换格式
+
+在 Archlinux 上可以通过 `pacman` 安装 `json-c` 库
+```shell
+sudo pacman -S json-c
+```
 
 ### 登陆
 
