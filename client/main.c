@@ -47,10 +47,10 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Failed to read command\n");
             return 1;
         }
+        
         // 执行命令
         if(command_execute(sockfd, &command, &state) == -1) {
             fprintf(stderr, "Failed to execute command\n");
-            return 1;
         }
     }
 

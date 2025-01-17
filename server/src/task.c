@@ -4,6 +4,12 @@
 #include <stdio.h>
 #include <shadow.h>
 #include <crypt.h>
+#include <unistd.h>
+#include <stdbool.h>
+#include <dirent.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "task.h"
 #include "cmd.h"
@@ -11,8 +17,10 @@
 #include "message.h"
 #include "connection.h"
 
+#define PATH_PREFIX "/home/dyp/ftp"
+
 #define MESSAGE_TEMPLATE "{\"type\": \"%s\", \"%s\": \"%s\", \"%s\": \"%s\"}"
-#define MESSAGE_LENGTH 4096
+#define MESSAGE_LENGTH 8192
 
 #define OPTPARSE_IMPLEMENTATION
 #include "optparse.h"
@@ -221,23 +229,125 @@ int task_register(int fd, int argc, char *argv[])
 
 int task_mkdir(int fd, int argc, char *argv[])
 {
-    for (int i = 0; i < argc; i++)
-    {
-        printf("argv[%d]: %s\n", i, argv[i]);
+    extern connect_table_t *connections;
+    // 查找当前连接
+    connection_t *conn = NULL;
+    if(connect_table_find(connections, fd, &conn) != 0) {
+        printf("find connection failed\n");
+        return -1;
+    }
+    char message[MESSAGE_LENGTH] = {0};
+    // 获取当前工作目录
+    char current[2048] = {0};
+    if(cwd_pwd(conn->cwd, current, 2048) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "get current working directory error", "example", "mkdir [dir]");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
     }
 
+    // 路径入栈
+    if(cwd_push(conn->cwd, argv[1]) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "change directory failed", "example", "mkdir [dir]");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+
+    // 获取当前工作目录
+    char cwd[2048] = {0};
+    if(cwd_pwd(conn->cwd, cwd, 2048) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "get current working directory error", "example", "mkdir [dir]");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    // 拼接真实路径
+    char real_path[4096] = {0};
+    snprintf(real_path, 4096, "%s/%s%s", PATH_PREFIX, conn->username, cwd);
+    printf("real path: %s\n", real_path);
+
+    // 不递归
+    if(mkdir(real_path, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IRGRP) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "create directory failed", "example", "mkdir [-p] dir");
+        // 发送消息
+        message_send(fd, message);
+        // 切换回原来的目录
+        cwd_push(conn->cwd, current);
+        return -1;
+    }
+    // 切换回原来的目录
+    cwd_push(conn->cwd, current);
+    snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "success", "cwd", current, "example", "mkdir [-p] dir");
+    // 发送消息
+    message_send(fd, message);
     return 0;
 }
 
 int task_rmdir(int fd, int argc, char *argv[])
 {
-    for (int i = 0; i < argc; i++)
-    {
-        printf("argv[%d]: %s\n", i, argv[i]);
+    extern connect_table_t *connections;
+    // 查找当前连接
+    connection_t *conn = NULL;
+    if(connect_table_find(connections, fd, &conn) != 0) {
+        printf("find connection failed\n");
+        return -1;
+    }
+    char message[MESSAGE_LENGTH] = {0};
+    // 获取当前工作目录
+    char current[2048] = {0};
+    if(cwd_pwd(conn->cwd, current, 2048) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "get current working directory error", "example", "rmdir [dir]");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    // 路径入栈
+    if(cwd_push(conn->cwd, argv[1]) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "change directory failed", "example", "rmdir [dir]");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
     }
 
+    // 获取当前工作目录
+    char cwd[2048] = {0};
+    if(cwd_pwd(conn->cwd, cwd, 2048) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "get current working directory error", "example", "rmdir [dir]");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    // 拼接真实路径
+    char real_path[4096] = {0};
+    snprintf(real_path, 4096, "%s/%s%s", PATH_PREFIX, conn->username, cwd);
+    printf("real path: %s\n", real_path);
+    // 检查该目录是否存在
+    if(access(real_path, F_OK) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "no such directory", "example", "rmdir [dir]");
+        // 发送消息
+        message_send(fd, message);
+        // 切换回原来的目录
+        cwd_push(conn->cwd, current);
+        return -1;
+    }
+    // 调用 rmdir 函数删除目录
+    if(rmdir(real_path) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "remove directory failed", "example", "rmdir [dir]");
+        // 发送消息
+        message_send(fd, message);
+        // 切换回原来的目录
+        cwd_push(conn->cwd, current);
+        return -1;
+    }
+    // 切换回原来的目录
+    cwd_push(conn->cwd, current);
+    snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "success", "cwd", current, "example", "rmdir [dir]");
+    // 发送消息
+    message_send(fd, message);
     return 0;
 }
+
 
 int task_cd(int fd, int argc, char *argv[])
 {
@@ -255,8 +365,15 @@ int task_cd(int fd, int argc, char *argv[])
         printf("find connection failed\n");
         return -1;
     }
-    printf("connection:%p\n", conn);
-  
+
+    char current[2048] = {0};
+    if(cwd_pwd(conn->cwd, current, 2048) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "get current working directory error", "example", "cd [dir]");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+
     // 切换目录
     if(cwd_push(conn->cwd, argv[1]) != 0) {
         snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "change directory failed", "example", "cd [dir]");
@@ -264,8 +381,7 @@ int task_cd(int fd, int argc, char *argv[])
         message_send(fd, message);
         return -1;
     }
-    printf("change directory success\n");
-    
+
     // 获取当前工作目录
     char cwd[2048] = {0};
     if(cwd_pwd(conn->cwd, cwd, 2048) != 0) {
@@ -274,7 +390,19 @@ int task_cd(int fd, int argc, char *argv[])
         message_send(fd, message);
         return -1;
     }
-    printf("current working directory: %s\n", cwd);
+    // 拼接真实路径
+    char real_path[4096] = {0};
+    snprintf(real_path, 4096, "%s/%s%s", PATH_PREFIX, conn->username, cwd);
+    printf("real path: %s\n", real_path);
+    // 检查该目录是否存在
+    if(access(real_path, F_OK) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "no such directory", "example", "cd [dir]");
+        // 发送消息
+        message_send(fd, message);
+        // 切换回原来的目录
+        cwd_push(conn->cwd, current);
+        return -1;
+    }
     snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "success", "cwd", cwd, "example", "cd [dir]");
     // 发送消息
     message_send(fd, message);
@@ -283,20 +411,102 @@ int task_cd(int fd, int argc, char *argv[])
 
 int task_pwd(int fd, int argc, char *argv[])
 {
-    for (int i = 0; i < argc; i++)
-    {
-        printf("argv[%d]: %s\n", i, argv[i]);
+    extern connect_table_t *connections;
+    // 查找当前连接
+    connection_t *conn = NULL;
+    if(connect_table_find(connections, fd, &conn) != 0) {
+        printf("find connection failed\n");
+        return -1;
     }
-
+    char message[MESSAGE_LENGTH] = {0};
+    // 获取当前工作目录
+    char cwd[2048] = {0};
+    if(cwd_pwd(conn->cwd, cwd, 2048) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "get current working directory error", "example", "pwd");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "success", "cwd", cwd, "example", "pwd");
+    printf("message: %s\n", message);
+    // 发送消息
+    message_send(fd, message);
     return 0;
 }
 
 int task_ls(int fd, int argc, char *argv[])
 {
-    for (int i = 0; i < argc; i++)
-    {
-        printf("argv[%d]: %s\n", i, argv[i]);
+    extern connect_table_t *connections;
+    // 查找当前连接
+    connection_t *conn = NULL;
+    if(connect_table_find(connections, fd, &conn) != 0) {
+        printf("find connection failed\n");
+        return -1;
     }
+    char message[MESSAGE_LENGTH] = {0};
+    // 获取当前工作目录
+    char current[2048] = {0};
+    if(cwd_pwd(conn->cwd, current, 2048) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "get current working directory error", "example", "ls");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    if(argc == 2) {
+        // 路径入栈
+        if(cwd_push(conn->cwd, argv[1]) != 0) {
+            snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "change directory failed", "example", "ls");
+            // 发送消息
+            message_send(fd, message);
+            return -1;
+        }
+    }
+    // 获取当前工作目录
+    char cwd[2048] = {0};
+    if(cwd_pwd(conn->cwd, cwd, 2048) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "get current working directory error", "example", "ls");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    // 拼接真实路径
+    char real_path[4096] = {0};
+    snprintf(real_path, 4096, "%s/%s%s", PATH_PREFIX, conn->username, cwd);
+    printf("real path: %s\n", real_path);
+    // 检查该目录是否存在
+    if(access(real_path, F_OK) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "no such directory", "example", "ls");
+        // 发送消息
+        message_send(fd, message);
+        // 切换回原来的目录
+        cwd_push(conn->cwd, current);
+        return -1;
+    }
+    // 打开目录
+    DIR *dir = opendir(real_path);
+    if(dir == NULL) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "open directory failed", "example", "ls");
+        // 发送消息
+        message_send(fd, message);
+        // 切换回原来的目录
+        cwd_push(conn->cwd, current);
+        return -1;
+    }
+    // 读取目录
+    char all_files[4096] = {0};
+    struct dirent *entry;
+    while((entry = readdir(dir)) != NULL) {
+        strncat(all_files, entry->d_name, strlen(entry->d_name));
+        strcat(all_files, " ");
+    }
+    closedir(dir);
+    snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "success", "files", all_files, "example", "ls");
+    printf("message: %s\n", message);
+    // 发送消息
+    message_send(fd, message);
+
+    // 切换回原来的目录
+    cwd_push(conn->cwd, current);
 
     return 0;
 }

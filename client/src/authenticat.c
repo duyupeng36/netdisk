@@ -104,7 +104,7 @@ int sign_in(int fd, struct state *state)
     if(command_send(fd, &command) == -1) {
         return -1;
     }
-    // 读取消息
+    // 获取服务端响应的 JSON 字符串
     char *message = NULL;
     if(message_recv(fd, &message) == -1) {
         return -1;
@@ -124,6 +124,7 @@ int sign_in(int fd, struct state *state)
         ///获取 type
         json_object *type = json_object_object_get(root, "type");
         if(type == NULL) {
+            free(message);
             return -1;
         }
         if(strcmp(json_object_get_string(type), "error") == 0) {
@@ -133,21 +134,25 @@ int sign_in(int fd, struct state *state)
                 return -1;
             }
             printf("Error: %s\n", json_object_get_string(error));
+            free(message);
             return -1;
         } else if(strcmp(json_object_get_string(type), "success") == 0) {
             // 获取成功信息 cwd 和 token
             json_object *cwd = json_object_object_get(root, "cwd");
             json_object *token = json_object_object_get(root, "token");
             if(cwd == NULL || token == NULL) {
+                free(message);
                 return -1;
             }
             strcpy(state->cwd, json_object_get_string(cwd));
             strcpy(state->token, json_object_get_string(token));
-            return 0;
         }
+        break;
     default:
+        free(message);
         return -1;
     }
+    free(message);
     return 0;
 }
 
