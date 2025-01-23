@@ -1,21 +1,30 @@
-#include <ctype.h>
+
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
+
+#include <ctype.h>
+
 #include <shadow.h>
 #include <crypt.h>
-#include <unistd.h>
-#include <stdbool.h>
+
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include <sys/mman.h>
 #include <dirent.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
+
 
 #include "task.h"
 #include "cmd.h"
 #include "tcp.h"
 #include "message.h"
 #include "connection.h"
+#include "file.h"
 
 #define PATH_PREFIX "/home/dyp/ftp"
 
@@ -25,6 +34,8 @@
 #define OPTPARSE_IMPLEMENTATION
 #include "optparse.h"
 
+#include <unistd.h>
+extern int ftruncate (int fd, off_t length);
 
 task_t *parse_task(int fd, const char *command)
 {
@@ -522,12 +533,68 @@ int task_gets(int fd, int argc, char *argv[])
 }
 
 int task_puts(int fd, int argc, char *argv[])
-{
-    for (int i = 0; i < argc; i++)
-    {
-        printf("argv[%d]: %s\n", i, argv[i]);
+{   
+    // puts d.txt
+    // 获取当前连接 
+    extern connect_table_t *connections;
+    connection_t *conn = NULL;
+    if(connect_table_find(connections, fd, &conn) != 0) {
+        printf("find connection failed\n");
+        return -1;
     }
-
+    char message[MESSAGE_LENGTH] = {0};
+    // 获取当前工作目录
+    char cwd[2048] = {0};
+    if(cwd_pwd(conn->cwd, cwd, 2048) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "get current working directory error", "example", "puts [file]");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    // 拼接当前文件的真实路径
+    char real_path[4096] = {0};
+    snprintf(real_path, 4096, "%s/%s%s/%s", PATH_PREFIX, conn->username, cwd, argv[1]);
+    printf("real path: %s\n", real_path);
+    // 打开文件
+    int filefd = open(real_path, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    if (fd == -1) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "open file failed", "example", "puts [file]");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    // 接收文件
+    hdr_t hdr;
+    if(recvhdr(fd, &hdr) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "receive file header failed", "example", "puts [file]");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    // 将文件大小设置为 hdr.filesize
+    if(ftruncate(filefd, hdr.filesize) != 0) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "set file size failed", "example", "puts [file]");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    // 建立文件映射
+    const char *filemap = mmap(NULL, hdr.filesize, PROT_WRITE, MAP_SHARED, filefd, 0);
+    if(filemap == MAP_FAILED) {
+        snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "error", "message", "map file failed", "example", "puts [file]");
+        // 发送消息
+        message_send(fd, message);
+        return -1;
+    }
+    // 接收文件
+    recvn(fd, (void *)filemap, hdr.filesize);
+    // 解除文件映射
+    munmap((void *)filemap, hdr.filesize);
+    // 关闭文件
+    close(filefd);
+    snprintf(message, MESSAGE_LENGTH, MESSAGE_TEMPLATE, "success", "message", "receive file success", "example", "puts [file]");
+    // 发送消息
+    message_send(fd, message);
     return 0;
 }
 

@@ -16,7 +16,20 @@
         "types.h": "c",
         "optparse.h": "c",
         "spawn.h": "c",
-        "crypt.h": "c"
+        "crypt.h": "c",
+        "file.h": "c",
+        "ctype.h": "c",
+        "fcntl.h": "c",
+        "dirent.h": "c",
+        "task.h": "c",
+        "stat.h": "c",
+        "message.h": "c",
+        "connection.h": "c",
+        "cwd.h": "c",
+        "pool.h": "c",
+        "queue.h": "c",
+        "epoll.h": "c",
+        "config.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

@@ -216,6 +216,7 @@ int response_gets(int fd, struct state *state) {
 
 
 int response_puts(int fd, struct state *state) {
+    
     return 0;
 }
 
